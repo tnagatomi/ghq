@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"github.com/Songmu/gitconfig"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -39,12 +40,19 @@ func doGet(c *cli.Context) error {
 		g.silent = true
 	}
 
+	protocol, err := gitconfig.Get("ghq.protocol")
+	if err != nil && !gitconfig.IsNotFound(err) {
+		return err
+	}
+	if protocol == "ssh" {
+		g.ssh = true
+	}
+
 	var (
 		firstArg string // Look at the first repo only, if there are more than one
 		argCnt   int
 		getInfo  getInfo // For fetching and looking a single repo
 		scr      scanner
-		err      error
 	)
 	if len(args) > 0 {
 		scr = &sliceScanner{slice: args}

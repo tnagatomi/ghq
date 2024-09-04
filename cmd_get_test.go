@@ -67,6 +67,72 @@ func TestCommandGet(t *testing.T) {
 			}
 		},
 	}, {
+		name: "ghq.protocol = ssh",
+		scenario: func(t *testing.T, tmpRoot string, cloneArgs *_cloneArgs, updateArgs *_updateArgs) {
+			t.Cleanup(gitconfig.WithConfig(t, fmt.Sprintf(`
+[ghq]
+  protocol = ssh
+`)))
+			localDir := filepath.Join(tmpRoot, "github.com", "motemen", "ghq-test-repo")
+
+			app.Run([]string{"", "get", "motemen/ghq-test-repo"})
+
+			expect := "ssh://git@github.com/motemen/ghq-test-repo"
+			if cloneArgs.remote.String() != expect {
+				t.Errorf("got: %s, expect: %s", cloneArgs.remote, expect)
+			}
+			if filepath.ToSlash(cloneArgs.local) != filepath.ToSlash(localDir) {
+				t.Errorf("got: %s, expect: %s", filepath.ToSlash(cloneArgs.local), filepath.ToSlash(localDir))
+			}
+			if cloneArgs.shallow {
+				t.Errorf("cloneArgs.shallow should be false")
+			}
+		},
+	}, {
+		name: "invalid ghq.protocol",
+		scenario: func(t *testing.T, tmpRoot string, cloneArgs *_cloneArgs, updateArgs *_updateArgs) {
+			t.Cleanup(gitconfig.WithConfig(t, fmt.Sprintf(`
+[ghq]
+  protocol = ftp
+`)))
+			localDir := filepath.Join(tmpRoot, "github.com", "motemen", "ghq-test-repo")
+
+			app.Run([]string{"", "get", "motemen/ghq-test-repo"})
+
+			expect := "https://github.com/motemen/ghq-test-repo"
+			if cloneArgs.remote.String() != expect {
+				t.Errorf("got: %s, expect: %s", cloneArgs.remote, expect)
+			}
+			if filepath.ToSlash(cloneArgs.local) != filepath.ToSlash(localDir) {
+				t.Errorf("got: %s, expect: %s", filepath.ToSlash(cloneArgs.local), filepath.ToSlash(localDir))
+			}
+			if cloneArgs.shallow {
+				t.Errorf("cloneArgs.shallow should be false")
+			}
+		},
+	}, {
+		name: "ghq.protocol = ssh and -p",
+		scenario: func(t *testing.T, tmpRoot string, cloneArgs *_cloneArgs, updateArgs *_updateArgs) {
+			t.Cleanup(gitconfig.WithConfig(t, fmt.Sprintf(`
+[ghq]
+  protocol = ssh
+`)))
+			localDir := filepath.Join(tmpRoot, "github.com", "motemen", "ghq-test-repo")
+
+			app.Run([]string{"", "get", "-p", "motemen/ghq-test-repo"})
+
+			expect := "ssh://git@github.com/motemen/ghq-test-repo"
+			if cloneArgs.remote.String() != expect {
+				t.Errorf("got: %s, expect: %s", cloneArgs.remote, expect)
+			}
+			if filepath.ToSlash(cloneArgs.local) != filepath.ToSlash(localDir) {
+				t.Errorf("got: %s, expect: %s", filepath.ToSlash(cloneArgs.local), filepath.ToSlash(localDir))
+			}
+			if cloneArgs.shallow {
+				t.Errorf("cloneArgs.shallow should be false")
+			}
+		},
+	}, {
 		name: "already cloned with -update",
 		scenario: func(t *testing.T, tmpRoot string, cloneArgs *_cloneArgs, updateArgs *_updateArgs) {
 			localDir := filepath.Join(tmpRoot, "github.com", "motemen", "ghq-test-repo")
